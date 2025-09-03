@@ -61,6 +61,14 @@ export default {
 					'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
+				},
+				cs2: {
+					orange: '#FF6B35',
+					cyan: '#00D4FF',
+					dark: '#1A1A1A',
+					darker: '#0D0D0D',
+					yellow: '#FFD700',
+					gradient: 'linear-gradient(135deg, #FF6B35 0%, #00D4FF 100%)'
 				}
 			},
 			borderRadius: {
@@ -84,11 +92,48 @@ export default {
 					to: {
 						height: '0'
 					}
+				},
+				'pulse-glow': {
+					'0%, 100%': {
+						opacity: '1',
+						transform: 'scale(1)'
+					},
+					'50%': {
+						opacity: '0.8',
+						transform: 'scale(1.05)'
+					}
+				},
+				'case-open': {
+					'0%': {
+						transform: 'scale(1) rotateY(0deg)',
+						opacity: '1'
+					},
+					'50%': {
+						transform: 'scale(1.1) rotateY(180deg)',
+						opacity: '0.7'
+					},
+					'100%': {
+						transform: 'scale(1) rotateY(360deg)',
+						opacity: '1'
+					}
+				},
+				'weapon-reveal': {
+					'0%': {
+						opacity: '0',
+						transform: 'translateY(20px) scale(0.8)'
+					},
+					'100%': {
+						opacity: '1',
+						transform: 'translateY(0) scale(1)'
+					}
 				}
 			},
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
-				'accordion-up': 'accordion-up 0.2s ease-out'
+				'accordion-up': 'accordion-up 0.2s ease-out',
+				'pulse-glow': 'pulse-glow 2s ease-in-out infinite',
+				'case-open': 'case-open 1.5s ease-in-out',
+				'weapon-reveal': 'weapon-reveal 0.8s ease-out forwards'
 			}
 		}
 	},
