@@ -22,7 +22,7 @@ const WinningsFeed: React.FC<WinningsFeedProps> = ({ winnings, getRarityClass })
   return (
     <div className="fixed left-4 top-32 bottom-4 w-80 z-40 hidden xl:block px-0.5 rounded-sm">
       <Card className="bg-jungle-dark/90 backdrop-blur-sm border-jungle-accent/20 h-full">
-        <CardContent className="p-4 h-full flex flex-col">
+        <CardContent className="p-4 h-full flex flex-col px-[23px]">
           <div className="flex items-center space-x-2 mb-4">
             <Icon name="Trophy" className="w-5 h-5 text-jungle-gold" />
             <h3 className="text-white font-bold font-['Oswald']">ЖИВЫЕ ВЫИГРЫШИ</h3>
