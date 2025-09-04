@@ -62,13 +62,15 @@ export default {
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
 				},
-				cs2: {
-					orange: '#FF6B35',
-					cyan: '#00D4FF',
-					dark: '#1A1A1A',
-					darker: '#0D0D0D',
-					yellow: '#FFD700',
-					gradient: 'linear-gradient(135deg, #FF6B35 0%, #00D4FF 100%)'
+				jungle: {
+					dark: '#0a1a0a',
+					darker: '#051105',
+					green: '#2d5016',
+					light: '#4a7c59',
+					accent: '#7cb342',
+					gold: '#ffc107',
+					venom: '#cddc39',
+					cobra: '#8bc34a'
 				}
 			},
 			borderRadius: {
