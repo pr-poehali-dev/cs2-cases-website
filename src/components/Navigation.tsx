@@ -33,7 +33,8 @@ const Navigation: React.FC<NavigationProps> = ({
             <div className="w-10 h-10 cobra-gradient rounded-lg flex items-center justify-center">
               <Icon name="Zap" className="w-6 h-6 text-black" />
             </div>
-            <span className="text-2xl font-bold text-white font-['Oswald']">JUNGLE CASES</span>
+            <span className="text-2xl font-bold text-white font-['Oswald']">COBRAS CASE
+</span>
           </div>
           
           <div className="hidden md:flex items-center space-x-6">
