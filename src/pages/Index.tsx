@@ -818,9 +818,7 @@ const Index = () => {
       {/* Cases Section */}
       <section id="cases" className="py-20">
         <div className="container mx-auto px-6">
-          <h2 className="text-4xl font-bold text-center text-white mb-12 font-['Oswald']">
-            КЕЙСЫ ДЖУНГЛЕЙ 🐍
-          </h2>
+          <h2 className="text-4xl font-bold text-center text-white mb-12 font-['Oswald']">КЕЙСЫ COBRAS 🐍</h2>
           
           <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
             {cases.map((caseItem) => (
