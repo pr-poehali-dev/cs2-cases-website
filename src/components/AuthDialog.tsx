@@ -66,7 +66,7 @@ const AuthDialog: React.FC<AuthDialogProps> = ({
               <Input 
                 id="email" 
                 type="text" 
-                placeholder="hunter@jungle.com или admin" 
+                placeholder="hunter@jungle.com" 
                 className="bg-jungle-darker border-jungle-accent/20 text-white"
                 onKeyPress={(e) => handleKeyPress(e, true)}
               />
@@ -88,11 +88,8 @@ const AuthDialog: React.FC<AuthDialogProps> = ({
               Войти в джунгли 🐍
             </Button>
             <div className="text-center space-y-2">
-              <p className="text-xs text-gray-400">
-                Для админ-панели: <strong>admin</strong> / <strong>admin</strong>
-              </p>
               <p className="text-xs text-jungle-cobra">
-                Новые охотники получают 1000 🐍
+                Новые охотники получают 10 🐍
               </p>
             </div>
           </TabsContent>
@@ -122,7 +119,7 @@ const AuthDialog: React.FC<AuthDialogProps> = ({
               Стать охотником 🐍
             </Button>
             <p className="text-xs text-gray-400 text-center">
-              Регистрируясь, вы получаете 1000 🐍 для старта охоты!
+              Регистрируясь, вы получаете 10 🐍 для старта охоты!
             </p>
           </TabsContent>
         </Tabs>

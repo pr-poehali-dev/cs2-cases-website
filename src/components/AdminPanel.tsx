@@ -81,17 +81,21 @@ const AdminPanel: React.FC<AdminPanelProps> = ({
   };
 
   const changeBalance = () => {
-    setBalance(balance + balanceChange);
-    setBalanceChange(0);
+    if (balanceChange !== 0) {
+      setBalance(balance + balanceChange);
+      setBalanceChange(0);
+    }
   };
 
   const updateDropChances = () => {
-    const updatedWeapons = weapons.map(weapon => ({
-      ...weapon,
-      dropChance: weapon.dropChance * dropMultiplier
-    }));
-    setWeapons(updatedWeapons);
-    setDropMultiplier(1);
+    if (dropMultiplier !== 1) {
+      const updatedWeapons = weapons.map(weapon => ({
+        ...weapon,
+        dropChance: Math.max(0.01, Math.min(1.0, weapon.dropChance * dropMultiplier))
+      }));
+      setWeapons(updatedWeapons);
+      setDropMultiplier(1);
+    }
   };
 
   return (
@@ -374,7 +378,9 @@ const AdminPanel: React.FC<AdminPanelProps> = ({
                   </div>
                   <div className="flex space-x-2">
                     <Button 
-                      onClick={() => {setBalanceChange(1000); changeBalance();}}
+                      onClick={() => {
+                        setBalance(balance + 1000);
+                      }}
                       size="sm"
                       variant="outline"
                       className="border-green-500 text-green-400"
@@ -382,7 +388,9 @@ const AdminPanel: React.FC<AdminPanelProps> = ({
                       +1000 🐍
                     </Button>
                     <Button 
-                      onClick={() => {setBalanceChange(5000); changeBalance();}}
+                      onClick={() => {
+                        setBalance(balance + 5000);
+                      }}
                       size="sm"
                       variant="outline"
                       className="border-green-500 text-green-400"
@@ -390,7 +398,9 @@ const AdminPanel: React.FC<AdminPanelProps> = ({
                       +5000 🐍
                     </Button>
                     <Button 
-                      onClick={() => {setBalanceChange(-500); changeBalance();}}
+                      onClick={() => {
+                        setBalance(Math.max(0, balance - 500));
+                      }}
                       size="sm"
                       variant="outline"
                       className="border-red-500 text-red-400"
@@ -427,7 +437,13 @@ const AdminPanel: React.FC<AdminPanelProps> = ({
                   </div>
                   <div className="flex space-x-2">
                     <Button 
-                      onClick={() => {setDropMultiplier(2); updateDropChances();}}
+                      onClick={() => {
+                        const updatedWeapons = weapons.map(weapon => ({
+                          ...weapon,
+                          dropChance: Math.min(1.0, weapon.dropChance * 2)
+                        }));
+                        setWeapons(updatedWeapons);
+                      }}
                       size="sm"
                       variant="outline"
                       className="border-green-500 text-green-400"
@@ -435,7 +451,13 @@ const AdminPanel: React.FC<AdminPanelProps> = ({
                       x2 Увеличить
                     </Button>
                     <Button 
-                      onClick={() => {setDropMultiplier(0.5); updateDropChances();}}
+                      onClick={() => {
+                        const updatedWeapons = weapons.map(weapon => ({
+                          ...weapon,
+                          dropChance: Math.max(0.01, weapon.dropChance * 0.5)
+                        }));
+                        setWeapons(updatedWeapons);
+                      }}
                       size="sm"
                       variant="outline"
                       className="border-red-500 text-red-400"
@@ -443,7 +465,16 @@ const AdminPanel: React.FC<AdminPanelProps> = ({
                       x0.5 Уменьшить
                     </Button>
                     <Button 
-                      onClick={() => {setDropMultiplier(1); updateDropChances();}}
+                      onClick={() => {
+                        const resetWeapons = weapons.map((weapon, index) => {
+                          const originalChances = [0.05, 0.08, 0.15, 0.25, 0.35, 0.55];
+                          return {
+                            ...weapon,
+                            dropChance: originalChances[index] || 0.1
+                          };
+                        });
+                        setWeapons(resetWeapons);
+                      }}
                       size="sm"
                       variant="outline"
                       className="border-jungle-cobra text-jungle-cobra"

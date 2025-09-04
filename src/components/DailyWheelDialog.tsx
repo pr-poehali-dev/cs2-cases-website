@@ -79,7 +79,7 @@ const DailyWheelDialog: React.FC<DailyWheelProps> = ({
 
     setIsSpinning(true);
     const randomSegment = Math.floor(Math.random() * wheelSegments.length);
-    const baseRotation = 360 * 5; // 5 полных оборотов
+    const baseRotation = 360 * (8 + Math.random() * 4); // 8-12 оборотов для динамики
     const segmentAngle = 360 / wheelSegments.length;
     const targetRotation = baseRotation + (360 - (randomSegment * segmentAngle + segmentAngle / 2));
     
@@ -97,7 +97,7 @@ const DailyWheelDialog: React.FC<DailyWheelProps> = ({
       setTimeout(() => {
         setShowDailyWheel(false);
       }, 2000);
-    }, 4000);
+    }, 6000);
   };
 
   return (
@@ -116,16 +116,20 @@ const DailyWheelDialog: React.FC<DailyWheelProps> = ({
         <div className="flex flex-col items-center space-y-8 py-6">
           <div className="relative w-80 h-80">
             <div 
-              className={`w-full h-full rounded-full border-8 border-jungle-gold transition-transform duration-4000 ease-out`}
+              className={`w-full h-full rounded-full border-8 border-jungle-gold shadow-2xl transition-transform ${isSpinning ? 'duration-[6000ms] ease-[cubic-bezier(0.23, 1, 0.320, 1)]' : 'duration-500'}`}
               style={{ 
                 transform: `rotate(${wheelRotation}deg)`,
                 background: `conic-gradient(
-                  ${wheelSegments.map((segment, index) => {
-                    const start = (index * 45);
-                    const end = ((index + 1) * 45);
-                    return `from ${segment.bg.split(' ')[1]} ${start}deg ${end}deg`;
-                  }).join(', ')}
-                )`
+                  #ef4444 0deg 45deg,
+                  #f97316 45deg 90deg, 
+                  #eab308 90deg 135deg,
+                  #22c55e 135deg 180deg,
+                  #a855f7 180deg 225deg,
+                  #3b82f6 225deg 270deg,
+                  #ec4899 270deg 315deg,
+                  #6366f1 315deg 360deg
+                )`,
+                boxShadow: isSpinning ? '0 0 50px rgba(234, 179, 8, 0.6), inset 0 0 30px rgba(255,255,255,0.2)' : '0 0 30px rgba(234, 179, 8, 0.3)'
               }}
             >
               {wheelSegments.map((segment, index) => (

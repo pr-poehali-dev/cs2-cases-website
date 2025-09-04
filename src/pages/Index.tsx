@@ -201,16 +201,16 @@ const Index = () => {
     openCaseWithRoulette(caseItem);
   };
 
-  const toggleItemSelection = (item: any) => {
+  const toggleItemSelection = (item: any, itemIndex: number) => {
     setSelectedItems(prev => {
-      const isSelected = prev.find(i => i.name === item.name && i.price === item.price);
+      const isSelected = prev.find(i => i.uniqueId === `${item.name}_${itemIndex}`);
       if (isSelected) {
-        return prev.filter(i => !(i.name === item.name && i.price === item.price));
+        return prev.filter(i => i.uniqueId !== `${item.name}_${itemIndex}`);
       }
       if (prev.length >= 10) {
         return prev;
       }
-      return [...prev, item];
+      return [...prev, {...item, uniqueId: `${item.name}_${itemIndex}`}];
     });
   };
 
@@ -418,9 +418,9 @@ const Index = () => {
                         <input 
                           type="checkbox"
                           className="w-3 h-3"
-                          checked={selectedItems.find(i => i.name === item.name && i.price === item.price) !== undefined}
-                          onChange={() => toggleItemSelection(item)}
-                          disabled={selectedItems.length >= 10 && !selectedItems.find(i => i.name === item.name && i.price === item.price)}
+                          checked={selectedItems.find(i => i.uniqueId === `${item.name}_${index}`) !== undefined}
+                          onChange={() => toggleItemSelection(item, index)}
+                          disabled={selectedItems.length >= 10 && !selectedItems.find(i => i.uniqueId === `${item.name}_${index}`)}
                         />
                       </div>
                     </div>

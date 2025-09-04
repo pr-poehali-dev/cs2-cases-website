@@ -196,24 +196,70 @@
   }
 
   .case-roulette {
-    animation: roulette-spin 4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    animation: roulette-spin 6s cubic-bezier(0.23, 1, 0.32, 1);
+    will-change: transform;
+  }
+
+  .case-roulette-smooth {
+    animation: roulette-spin-smooth 6s cubic-bezier(0.17, 0.04, 0.03, 0.94);
+    will-change: transform;
+  }
+
+  .roulette-winner-highlight {
+    animation: winner-pulse 1s ease-in-out infinite alternate;
+    transform-origin: center;
   }
 
   @keyframes roulette-spin {
     0% {
       transform: translateX(0px);
     }
-    80% {
-      transform: translateX(-1800px);
+    70% {
+      transform: translateX(-1700px);
     }
-    90% {
-      transform: translateX(-1900px);
+    85% {
+      transform: translateX(-1850px);
     }
     95% {
       transform: translateX(-1950px);
     }
     100% {
       transform: translateX(-2000px);
+    }
+  }
+
+  @keyframes roulette-spin-smooth {
+    0% {
+      transform: translateX(0px);
+      animation-timing-function: cubic-bezier(0.23, 1, 0.32, 1);
+    }
+    60% {
+      transform: translateX(-1500px);
+      animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    80% {
+      transform: translateX(-1800px);
+      animation-timing-function: cubic-bezier(0.6, 0, 0.4, 1);
+    }
+    95% {
+      transform: translateX(-1980px);
+      animation-timing-function: cubic-bezier(0.8, 0, 0.9, 1);
+    }
+    100% {
+      transform: translateX(-2000px);
+    }
+  }
+
+  @keyframes winner-pulse {
+    0% {
+      box-shadow: 0 0 20px rgba(255, 215, 0, 0.8);
+      border: 3px solid rgba(255, 215, 0, 0.6);
+    }
+    100% {
+      box-shadow:
+        0 0 40px rgba(255, 215, 0, 1),
+        0 0 80px rgba(255, 215, 0, 0.5);
+      border: 3px solid rgba(255, 215, 0, 1);
     }
   }
 

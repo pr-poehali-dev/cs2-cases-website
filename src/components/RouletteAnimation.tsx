@@ -23,9 +23,9 @@ const RouletteAnimation: React.FC<RouletteAnimationProps> = ({
           <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-1 h-40 bg-gradient-to-b from-jungle-accent to-jungle-gold z-20 rounded-full shadow-lg"></div>
           <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-8 h-8 rotate-45 bg-jungle-accent z-20 border-2 border-jungle-gold"></div>
           
-          <div className="case-roulette flex items-center h-full px-4" style={{width: '8000px'}}>
+          <div className="case-roulette-smooth flex items-center h-full px-4" style={{width: '8000px'}}>
             {rouletteItems.map((item, index) => (
-              <div key={index} className={`roulette-item flex-shrink-0 w-40 h-40 p-3 ${index === 25 ? 'roulette-winning' : ''}`}>
+              <div key={index} className={`roulette-item flex-shrink-0 w-40 h-40 p-3 ${index === 25 ? 'roulette-winner-highlight' : ''}`}>
                 <div className={`w-full h-full rounded-xl ${getRarityClass(item.rarity)} flex flex-col items-center justify-center p-3 relative overflow-hidden`}>
                   <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
                   <img 
@@ -42,7 +42,9 @@ const RouletteAnimation: React.FC<RouletteAnimationProps> = ({
         </div>
         
         <div className="mt-8">
-          <Progress value={75} className="w-80 mx-auto mb-4" />
+          <div className="w-80 mx-auto mb-4 bg-jungle-darker rounded-full h-2 overflow-hidden">
+            <div className="h-full bg-gradient-to-r from-jungle-cobra to-jungle-gold rounded-full animate-pulse" style={{width: '85%'}}></div>
+          </div>
           <p className="text-jungle-cobra font-bold">Кобра выбирает...</p>
         </div>
       </div>
