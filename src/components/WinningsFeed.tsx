@@ -20,7 +20,7 @@ interface WinningsFeedProps {
 
 const WinningsFeed: React.FC<WinningsFeedProps> = ({ winnings, getRarityClass }) => {
   return (
-    <div className="fixed left-4 top-32 bottom-4 w-80 z-40 hidden xl:block">
+    <div className="fixed left-4 top-32 bottom-4 w-80 z-40 hidden xl:block px-0.5 rounded-sm">
       <Card className="bg-jungle-dark/90 backdrop-blur-sm border-jungle-accent/20 h-full">
         <CardContent className="p-4 h-full flex flex-col">
           <div className="flex items-center space-x-2 mb-4">
@@ -28,7 +28,7 @@ const WinningsFeed: React.FC<WinningsFeedProps> = ({ winnings, getRarityClass })
             <h3 className="text-white font-bold font-['Oswald']">ЖИВЫЕ ВЫИГРЫШИ</h3>
           </div>
           
-          <div className="flex-1 overflow-y-auto space-y-2 scrollbar-thin scrollbar-thumb-jungle-accent/20">
+          <div className="flex-1 overflow-y-auto space-y-2 scrollbar-thin scrollbar-thumb-jungle-accent/20 mx-0">
             {winnings.map((winning) => (
               <div 
                 key={winning.id}
