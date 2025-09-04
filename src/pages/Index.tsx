@@ -2,12 +2,19 @@ import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import Icon from '@/components/ui/icon';
+
+import AuthDialog from '@/components/AuthDialog';
+import Navigation from '@/components/Navigation';
+import WinningsFeed from '@/components/WinningsFeed';
+import DailyWheelDialog from '@/components/DailyWheelDialog';
+import RouletteAnimation from '@/components/RouletteAnimation';
+import WeaponRevealDialog from '@/components/WeaponRevealDialog';
+import AdminPanel from '@/components/AdminPanel';
 
 const Index = () => {
   const [isOpening, setIsOpening] = useState(false);
@@ -20,14 +27,17 @@ const Index = () => {
   const [showStats, setShowStats] = useState(false);
   const [showInventory, setShowInventory] = useState(false);
   const [showContracts, setShowContracts] = useState(false);
+  const [showDailyWheel, setShowDailyWheel] = useState(false);
   const [isRoulette, setIsRoulette] = useState(false);
   const [selectedItems, setSelectedItems] = useState<any[]>([]);
   const [authMode, setAuthMode] = useState<'login' | 'register'>('login');
   const [rouletteItems, setRouletteItems] = useState<any[]>([]);
   const [contractAnimating, setContractAnimating] = useState(false);
   const [winningIndex, setWinningIndex] = useState(25);
+  const [winningsFeed, setWinningsFeed] = useState<any[]>([]);
+  const [editingProfile, setEditingProfile] = useState(false);
+  const [profileForm, setProfileForm] = useState({ username: '', email: '', avatar: '' });
 
-  // Статистика пользователя
   const [userStats, setUserStats] = useState({
     casesOpened: 0,
     contractsCompleted: 0,
@@ -38,7 +48,7 @@ const Index = () => {
     totalProfit: 0
   });
 
-  const cases = [
+  const [cases, setCases] = useState([
     {
       id: 1,
       name: 'Jungle Serpent Case',
@@ -60,9 +70,9 @@ const Index = () => {
       image: '/img/386effb8-3efb-4de0-a5a6-acc2b09939e8.jpg',
       rarity: 'легендарный'
     }
-  ];
+  ]);
 
-  const weapons = [
+  const [weapons, setWeapons] = useState([
     {
       name: 'AK-47 | Jungle Tiger',
       rarity: 'скрытый',
@@ -105,7 +115,7 @@ const Index = () => {
       image: '/img/5ac857d4-d25f-43b9-b2d2-5a30db8c30c9.jpg',
       dropChance: 0.55
     }
-  ];
+  ]);
 
   const [inventory, setInventory] = useState<any[]>([]);
 
@@ -148,6 +158,19 @@ const Index = () => {
     return {items, winningWeapon};
   };
 
+  const addToWinningsFeed = (weapon: any, username: string) => {
+    const newWinning = {
+      id: Date.now().toString(),
+      username,
+      weaponName: weapon.name,
+      weaponImage: weapon.image,
+      rarity: weapon.rarity,
+      value: weapon.price,
+      timestamp: new Date()
+    };
+    setWinningsFeed(prev => [newWinning, ...prev.slice(0, 19)]);
+  };
+
   const openCaseWithRoulette = (caseItem: any) => {
     if (!user) {
       setShowAuth(true);
@@ -166,6 +189,7 @@ const Index = () => {
       setOpenedWeapon(winningWeapon);
       setIsRoulette(false);
       setInventory(prev => [...prev, winningWeapon]);
+      addToWinningsFeed(winningWeapon, user.username);
     }, 4000);
   };
 
@@ -198,7 +222,6 @@ const Index = () => {
     const random = Math.random();
     
     setTimeout(() => {
-      // Убираем выбранные предметы из инвентаря
       setInventory(prev => {
         let newInventory = [...prev];
         selectedItems.forEach(selectedItem => {
@@ -214,14 +237,11 @@ const Index = () => {
       
       let rewardValue;
       if (random < 0.5) {
-        // 50% шанс получить на 80% меньше
         rewardValue = Math.floor(totalValue * 0.2);
       } else {
-        // 50% шанс получить на 40% больше
         rewardValue = Math.floor(totalValue * 1.4);
       }
       
-      // Находим подходящее оружие по цене
       const suitableWeapons = weapons.filter(w => Math.abs(w.price - rewardValue) < rewardValue * 0.3);
       const newWeapon = suitableWeapons.length > 0 
         ? suitableWeapons[Math.floor(Math.random() * suitableWeapons.length)]
@@ -236,6 +256,8 @@ const Index = () => {
         totalSpent: prev.totalSpent + totalValue,
         totalEarned: prev.totalEarned + rewardValue
       }));
+      
+      addToWinningsFeed(contractResult, user.username);
       
       setSelectedItems([]);
       setShowContracts(false);
@@ -276,213 +298,91 @@ const Index = () => {
       email,
       username: email.split('@')[0],
       isAdmin: false,
-      balance: 1000,
+      balance: 10,
       joinDate: new Date(),
       avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${email}`
     };
     setUser(newUser);
-    setBalance(1000);
+    setBalance(10);
     setShowAuth(false);
   };
 
-  // Защита от неавторизованного доступа
+  const handleDailyWheelSpin = (amount: number) => {
+    setBalance(prev => prev + amount);
+    setUserStats(prev => ({
+      ...prev,
+      totalEarned: prev.totalEarned + amount,
+      totalProfit: prev.totalProfit + amount
+    }));
+  };
+
+  const updateProfile = () => {
+    if (profileForm.username && profileForm.email) {
+      setUser({
+        ...user,
+        username: profileForm.username,
+        email: profileForm.email,
+        avatar: profileForm.avatar || user.avatar
+      });
+      setEditingProfile(false);
+    }
+  };
+
+  const logout = () => {
+    setUser(null);
+    setBalance(0);
+    setInventory([]);
+    setShowAuth(true);
+  };
+
+  useEffect(() => {
+    if (user && showProfile) {
+      setProfileForm({
+        username: user.username,
+        email: user.email,
+        avatar: user.avatar
+      });
+    }
+  }, [user, showProfile]);
+
   if (!user) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-jungle-darker via-jungle-dark to-black flex items-center justify-center">
-        <Dialog open={showAuth} onOpenChange={() => {}}>
-          <DialogContent className="bg-jungle-dark border-jungle-accent/20" onInteractOutside={(e) => e.preventDefault()}>
-            <DialogHeader>
-              <DialogTitle className="text-white font-['Oswald'] text-center text-2xl">
-                🐍 Добро пожаловать в джунгли! 🐍
-              </DialogTitle>
-              <DialogDescription className="text-gray-400 text-center">
-                Авторизуйтесь для доступа к охоте за скинами
-              </DialogDescription>
-            </DialogHeader>
-            
-            <Tabs value={authMode} onValueChange={(value) => setAuthMode(value as 'login' | 'register')}>
-              <TabsList className="grid w-full grid-cols-2 bg-jungle-darker">
-                <TabsTrigger value="login" className="text-white data-[state=active]:bg-jungle-accent data-[state=active]:text-black">
-                  Вход
-                </TabsTrigger>
-                <TabsTrigger value="register" className="text-white data-[state=active]:bg-jungle-accent data-[state=active]:text-black">
-                  Регистрация
-                </TabsTrigger>
-              </TabsList>
-              
-              <TabsContent value="login" className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="email" className="text-white">Email или логин</Label>
-                  <Input 
-                    id="email" 
-                    type="text" 
-                    placeholder="hunter@jungle.com или admin" 
-                    className="bg-jungle-darker border-jungle-accent/20 text-white"
-                    onKeyPress={(e) => {
-                      if (e.key === 'Enter') {
-                        const email = (e.target as HTMLInputElement).value;
-                        const password = ((e.target as HTMLInputElement).parentNode?.parentNode?.querySelector('#password') as HTMLInputElement)?.value || '';
-                        if (email && password) handleAuth(email, password);
-                      }
-                    }}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="password" className="text-white">Пароль</Label>
-                  <Input 
-                    id="password" 
-                    type="password" 
-                    placeholder="Введите пароль"
-                    className="bg-jungle-darker border-jungle-accent/20 text-white"
-                    onKeyPress={(e) => {
-                      if (e.key === 'Enter') {
-                        const password = (e.target as HTMLInputElement).value;
-                        const email = ((e.target as HTMLInputElement).parentNode?.parentNode?.querySelector('#email') as HTMLInputElement)?.value || '';
-                        if (email && password) handleAuth(email, password);
-                      }
-                    }}
-                  />
-                </div>
-                <Button 
-                  onClick={() => {
-                    const email = (document.getElementById('email') as HTMLInputElement)?.value || '';
-                    const password = (document.getElementById('password') as HTMLInputElement)?.value || '';
-                    if (email && password) handleAuth(email, password);
-                  }}
-                  className="w-full cobra-gradient text-black font-bold"
-                >
-                  Войти в джунгли 🐍
-                </Button>
-                <div className="text-center space-y-2">
-                  <p className="text-xs text-gray-400">
-                    Для админ-панели: <strong>admin</strong> / <strong>admin</strong>
-                  </p>
-                  <p className="text-xs text-jungle-cobra">
-                    Новые охотники получают 1000 🐍
-                  </p>
-                </div>
-              </TabsContent>
-              
-              <TabsContent value="register" className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="reg-email" className="text-white">Email</Label>
-                  <Input 
-                    id="reg-email" 
-                    type="email" 
-                    placeholder="hunter@jungle.com" 
-                    className="bg-jungle-darker border-jungle-accent/20 text-white" 
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="reg-password" className="text-white">Пароль</Label>
-                  <Input 
-                    id="reg-password" 
-                    type="password" 
-                    className="bg-jungle-darker border-jungle-accent/20 text-white" 
-                  />
-                </div>
-                <Button 
-                  onClick={() => {
-                    const email = (document.getElementById('reg-email') as HTMLInputElement)?.value || '';
-                    const password = (document.getElementById('reg-password') as HTMLInputElement)?.value || '';
-                    if (email && password) handleAuth(email, password);
-                  }}
-                  className="w-full cobra-gradient text-black font-bold"
-                >
-                  Стать охотником 🐍
-                </Button>
-                <p className="text-xs text-gray-400 text-center">
-                  Регистрируясь, вы получаете 1000 🐍 для старта охоты!
-                </p>
-              </TabsContent>
-            </Tabs>
-          </DialogContent>
-        </Dialog>
+        <AuthDialog 
+          showAuth={showAuth}
+          authMode={authMode}
+          setAuthMode={setAuthMode}
+          handleAuth={handleAuth}
+        />
       </div>
     );
   }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-jungle-darker via-jungle-dark to-black">
-      {/* Navigation */}
-      <nav className="bg-black/50 backdrop-blur-sm border-b border-jungle-accent/20 sticky top-0 z-50">
-        <div className="container mx-auto px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-2">
-              <div className="w-10 h-10 cobra-gradient rounded-lg flex items-center justify-center">
-                <Icon name="Zap" className="w-6 h-6 text-black" />
-              </div>
-              <span className="text-2xl font-bold text-white font-['Oswald']">JUNGLE CASES</span>
-            </div>
-            
-            <div className="hidden md:flex items-center space-x-6">
-              <Button 
-                variant="ghost" 
-                onClick={() => setShowInventory(true)}
-                className="text-white hover:text-jungle-cobra hover:bg-jungle-darker"
-              >
-                <Icon name="Package" className="w-4 h-4 mr-2" />
-                Инвентарь
-              </Button>
-              <Button 
-                variant="ghost" 
-                onClick={() => setShowContracts(true)}
-                className="text-white hover:text-jungle-cobra hover:bg-jungle-darker"
-              >
-                <Icon name="FileContract" className="w-4 h-4 mr-2" />
-                Контракты
-              </Button>
-              <Button 
-                variant="ghost" 
-                onClick={() => setShowStats(true)}
-                className="text-white hover:text-jungle-cobra hover:bg-jungle-darker"
-              >
-                <Icon name="BarChart3" className="w-4 h-4 mr-2" />
-                Статистика
-              </Button>
-            </div>
+      <Navigation 
+        balance={balance}
+        user={user}
+        setShowInventory={setShowInventory}
+        setShowContracts={setShowContracts}
+        setShowStats={setShowStats}
+        setShowProfile={setShowProfile}
+        setShowAdmin={setShowAdmin}
+        setShowDailyWheel={setShowDailyWheel}
+        logout={logout}
+      />
 
-            <div className="flex items-center space-x-4">
-              <div className="flex items-center space-x-2 bg-jungle-dark rounded-lg px-4 py-2">
-                <Icon name="Coins" className="w-5 h-5 text-jungle-gold" />
-                <span className="text-jungle-gold font-bold">{balance} 🐍</span>
-              </div>
-              
-              <button
-                onClick={() => setShowProfile(true)}
-                className="flex items-center space-x-2 text-white hover:text-jungle-cobra transition-colors"
-              >
-                <img 
-                  src={user.avatar} 
-                  alt={user.username}
-                  className="w-8 h-8 rounded-full border-2 border-jungle-cobra"
-                />
-                <span>{user.username}</span>
-              </button>
-              
-              {user.isAdmin && (
-                <Button 
-                  onClick={() => setShowAdmin(true)}
-                  variant="outline" 
-                  size="sm"
-                  className="border-jungle-accent text-jungle-accent hover:bg-jungle-accent hover:text-black"
-                >
-                  <Icon name="Settings" className="w-4 h-4 mr-1" />
-                  Админ
-                </Button>
-              )}
-              
-              <Button 
-                onClick={() => {setUser(null); setBalance(0); setInventory([]); setShowAuth(true);}}
-                variant="outline" 
-                size="sm"
-              >
-                Выйти
-              </Button>
-            </div>
-          </div>
-        </div>
-      </nav>
+      <WinningsFeed 
+        winnings={winningsFeed}
+        getRarityClass={getRarityClass}
+      />
+
+      <DailyWheelDialog 
+        showDailyWheel={showDailyWheel}
+        setShowDailyWheel={setShowDailyWheel}
+        onWheelSpin={handleDailyWheelSpin}
+        user={user}
+      />
 
       {/* Inventory Dialog */}
       <Dialog open={showInventory} onOpenChange={setShowInventory}>
@@ -690,12 +590,70 @@ const Index = () => {
                 alt={user.username}
                 className="w-24 h-24 rounded-full border-4 border-jungle-cobra"
               />
-              <div>
+              <div className="flex-1">
                 <h3 className="text-2xl font-bold text-white font-['Oswald']">{user.username}</h3>
                 <p className="text-jungle-cobra">{user.email}</p>
                 <p className="text-gray-400">В джунглях с {user.joinDate.toLocaleDateString('ru')}</p>
               </div>
+              <Button 
+                onClick={() => setEditingProfile(true)}
+                variant="outline"
+                className="border-jungle-accent text-jungle-accent hover:bg-jungle-accent hover:text-black"
+              >
+                <Icon name="Edit" className="w-4 h-4 mr-2" />
+                Редактировать
+              </Button>
             </div>
+
+            {editingProfile && (
+              <Card className="bg-jungle-darker border-jungle-accent/20">
+                <CardContent className="p-6 space-y-4">
+                  <h4 className="text-white font-bold text-lg">Редактирование профиля</h4>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label className="text-white">Имя пользователя</Label>
+                      <Input 
+                        value={profileForm.username}
+                        onChange={(e) => setProfileForm({...profileForm, username: e.target.value})}
+                        className="bg-jungle-darker border-jungle-accent/20 text-white"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-white">Email</Label>
+                      <Input 
+                        value={profileForm.email}
+                        onChange={(e) => setProfileForm({...profileForm, email: e.target.value})}
+                        className="bg-jungle-darker border-jungle-accent/20 text-white"
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-white">Аватар (URL)</Label>
+                    <Input 
+                      value={profileForm.avatar}
+                      onChange={(e) => setProfileForm({...profileForm, avatar: e.target.value})}
+                      placeholder={user.avatar}
+                      className="bg-jungle-darker border-jungle-accent/20 text-white"
+                    />
+                  </div>
+                  <div className="flex gap-2">
+                    <Button 
+                      onClick={updateProfile}
+                      className="cobra-gradient text-black font-bold"
+                    >
+                      Сохранить
+                    </Button>
+                    <Button 
+                      onClick={() => setEditingProfile(false)}
+                      variant="outline"
+                      className="border-white text-white"
+                    >
+                      Отменить
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
             
             <div className="grid grid-cols-2 gap-4">
               <div className="p-4 bg-jungle-darker rounded-lg text-center">
@@ -794,63 +752,30 @@ const Index = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Admin Panel */}
-      <Dialog open={showAdmin} onOpenChange={setShowAdmin}>
-        <DialogContent className="bg-jungle-dark border-jungle-accent/20 max-w-4xl">
-          <DialogHeader>
-            <DialogTitle className="text-white font-['Oswald'] text-2xl">
-              <Icon name="Shield" className="w-6 h-6 inline mr-2 text-jungle-accent" />
-              Админ-панель джунглей 👑
-            </DialogTitle>
-            <DialogDescription className="text-gray-400">
-              Управление сайтом Jungle Cases
-            </DialogDescription>
-          </DialogHeader>
-          
-          <div className="grid md:grid-cols-3 gap-6 py-4">
-            <Card className="bg-jungle-darker border-jungle-cobra/20">
-              <CardContent className="p-6 text-center">
-                <Icon name="Users" className="w-12 h-12 text-jungle-cobra mx-auto mb-4" />
-                <h3 className="text-white font-bold text-xl mb-2">12,847</h3>
-                <p className="text-gray-400">Активных охотников</p>
-              </CardContent>
-            </Card>
-            
-            <Card className="bg-jungle-darker border-jungle-gold/20">
-              <CardContent className="p-6 text-center">
-                <Icon name="Package" className="w-12 h-12 text-jungle-gold mx-auto mb-4" />
-                <h3 className="text-white font-bold text-xl mb-2">89,432</h3>
-                <p className="text-gray-400">Открыто кейсов</p>
-              </CardContent>
-            </Card>
-            
-            <Card className="bg-jungle-darker border-jungle-accent/20">
-              <CardContent className="p-6 text-center">
-                <Icon name="TrendingUp" className="w-12 h-12 text-jungle-accent mx-auto mb-4" />
-                <h3 className="text-white font-bold text-xl mb-2">523,410 🐍</h3>
-                <p className="text-gray-400">Общий оборот</p>
-              </CardContent>
-            </Card>
-          </div>
-          
-          <div className="space-y-4">
-            <div className="flex gap-4">
-              <Button className="cobra-gradient text-black font-bold flex-1">
-                <Icon name="Plus" className="w-4 h-4 mr-2" />
-                Добавить кейс
-              </Button>
-              <Button variant="outline" className="border-jungle-cobra text-jungle-cobra flex-1">
-                <Icon name="Edit" className="w-4 h-4 mr-2" />
-                Редактировать оружие
-              </Button>
-            </div>
-            <Button variant="outline" className="w-full border-jungle-gold text-jungle-gold">
-              <Icon name="BarChart3" className="w-4 h-4 mr-2" />
-              Статистика джунглей
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
+      <AdminPanel 
+        showAdmin={showAdmin}
+        setShowAdmin={setShowAdmin}
+        user={user}
+        balance={balance}
+        setBalance={setBalance}
+        weapons={weapons}
+        setWeapons={setWeapons}
+        cases={cases}
+        setCases={setCases}
+      />
+
+      <RouletteAnimation 
+        isRoulette={isRoulette}
+        rouletteItems={rouletteItems}
+        getRarityClass={getRarityClass}
+      />
+
+      <WeaponRevealDialog 
+        openedWeapon={openedWeapon}
+        setOpenedWeapon={setOpenedWeapon}
+        getRarityClass={getRarityClass}
+        isRoulette={isRoulette}
+      />
 
       {/* Hero Section */}
       <section className="relative py-20 overflow-hidden">
@@ -889,83 +814,6 @@ const Index = () => {
           </div>
         </div>
       </section>
-
-      {/* Case Opening Roulette */}
-      {isRoulette && (
-        <div className="fixed inset-0 bg-black/90 backdrop-blur-sm z-50 flex items-center justify-center">
-          <div className="text-center w-full px-4">
-            <h2 className="text-4xl font-bold text-white mb-8 font-['Oswald']">ОХОТА В ДЖУНГЛЯХ...</h2>
-            
-            <div className="relative w-full max-w-6xl mx-auto h-48 bg-gradient-to-r from-jungle-darker via-jungle-dark to-jungle-darker rounded-xl border-2 border-jungle-accent/20 overflow-hidden">
-              <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-1 h-40 bg-gradient-to-b from-jungle-accent to-jungle-gold z-20 rounded-full shadow-lg"></div>
-              <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-8 h-8 rotate-45 bg-jungle-accent z-20 border-2 border-jungle-gold"></div>
-              
-              <div className="case-roulette flex items-center h-full px-4" style={{width: '8000px'}}>
-                {rouletteItems.map((item, index) => (
-                  <div key={index} className={`roulette-item flex-shrink-0 w-40 h-40 p-3 ${index === 25 ? 'roulette-winning' : ''}`}>
-                    <div className={`w-full h-full rounded-xl ${getRarityClass(item.rarity)} flex flex-col items-center justify-center p-3 relative overflow-hidden`}>
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
-                      <img 
-                        src={item.image} 
-                        alt={item.name}
-                        className="w-20 h-20 object-cover mb-2 relative z-10"
-                      />
-                      <p className="text-xs text-black font-bold text-center relative z-10">{item.name.split('|')[0]}</p>
-                      <p className="text-xs text-black font-bold relative z-10">{item.price} 🐍</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-            
-            <div className="mt-8">
-              <Progress value={75} className="w-80 mx-auto mb-4" />
-              <p className="text-jungle-cobra font-bold">Кобра выбирает...</p>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Weapon Reveal */}
-      {openedWeapon && !isRoulette && (
-        <div className="fixed inset-0 bg-black/90 backdrop-blur-sm z-50 flex items-center justify-center">
-          <div className="text-center animate-weapon-reveal">
-            <div className="w-80 h-80 mx-auto mb-8 relative weapon-float-animation">
-              <img 
-                src={openedWeapon.image} 
-                alt={openedWeapon.name} 
-                className={`w-full h-full object-cover rounded-lg ${getRarityClass(openedWeapon.rarity)}`}
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent rounded-lg"></div>
-            </div>
-            <h2 className="text-5xl font-bold text-white mb-4 font-['Oswald']">{openedWeapon.name}</h2>
-            <Badge className={`text-xl px-6 py-3 mb-6 text-black font-bold ${getRarityClass(openedWeapon.rarity)}`}>
-              {openedWeapon.rarity.toUpperCase()}
-            </Badge>
-            <p className="text-3xl text-jungle-gold mb-8 font-bold">{openedWeapon.price} 🐍</p>
-            <div className="flex gap-4 justify-center">
-              <Button 
-                onClick={() => {
-                  sellItem(openedWeapon, -1);
-                  setOpenedWeapon(null);
-                }}
-                className="cobra-gradient text-black font-bold px-8 text-lg"
-              >
-                <Icon name="DollarSign" className="w-5 h-5 mr-2" />
-                Продать за {openedWeapon.price} 🐍
-              </Button>
-              <Button 
-                onClick={() => setOpenedWeapon(null)}
-                variant="outline" 
-                className="border-white text-white hover:bg-white hover:text-black px-8 text-lg"
-              >
-                <Icon name="Package" className="w-5 h-5 mr-2" />
-                В инвентарь
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Cases Section */}
       <section id="cases" className="py-20">
