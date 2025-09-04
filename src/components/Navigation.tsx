@@ -75,7 +75,7 @@ const Navigation: React.FC<NavigationProps> = ({
           <div className="flex items-center space-x-4">
             <div className="flex items-center space-x-2 bg-jungle-dark rounded-lg px-4 py-2">
               <Icon name="Coins" className="w-5 h-5 text-jungle-gold" />
-              <span className="text-jungle-gold font-bold">{balance} 🐍</span>
+              <span className="text-jungle-gold font-bold text-xs mx-[9px]">{balance} 🐍</span>
             </div>
             
             <button
