@@ -16,11 +16,25 @@ const Index = () => {
   const [user, setUser] = useState<any>(null);
   const [showAuth, setShowAuth] = useState(false);
   const [showAdmin, setShowAdmin] = useState(false);
+  const [showProfile, setShowProfile] = useState(false);
+  const [showStats, setShowStats] = useState(false);
   const [isRoulette, setIsRoulette] = useState(false);
   const [selectedItems, setSelectedItems] = useState<any[]>([]);
   const [showContracts, setShowContracts] = useState(false);
   const [authMode, setAuthMode] = useState<'login' | 'register'>('login');
   const [rouletteItems, setRouletteItems] = useState<any[]>([]);
+  const [contractAnimating, setContractAnimating] = useState(false);
+
+  // Статистика пользователя
+  const [userStats, setUserStats] = useState({
+    casesOpened: 45,
+    contractsCompleted: 12,
+    totalSpent: 8750,
+    totalEarned: 9200,
+    favoriteWeapon: 'AK-47 | Jungle Tiger',
+    luckyStreak: 7,
+    totalProfit: 450
+  });
 
   const cases = [
     {
@@ -173,6 +187,7 @@ const Index = () => {
     
     setIsRoulette(true);
     setBalance(prev => prev - caseItem.price);
+    setUserStats(prev => ({...prev, casesOpened: prev.casesOpened + 1, totalSpent: prev.totalSpent + caseItem.price}));
     
     const items = generateRouletteItems();
     setRouletteItems(items);
@@ -205,39 +220,54 @@ const Index = () => {
   const performContract = () => {
     if (selectedItems.length !== 10) return;
     
+    setContractAnimating(true);
     const totalValue = selectedItems.reduce((sum, item) => sum + item.price, 0);
     const random = Math.random();
     
-    // Убираем выбранные предметы из инвентаря
-    setInventory(prev => 
-      prev.filter(item => !selectedItems.find(selected => selected.name === item.name))
-    );
-    
-    let rewardValue;
-    if (random < 0.5) {
-      // 50% шанс получить на 80% меньше
-      rewardValue = Math.floor(totalValue * 0.2);
-    } else {
-      // 50% шанс получить на 40% больше
-      rewardValue = Math.floor(totalValue * 1.4);
-    }
-    
-    // Находим подходящее оружие по цене
-    const suitableWeapons = weapons.filter(w => Math.abs(w.price - rewardValue) < rewardValue * 0.3);
-    const newWeapon = suitableWeapons.length > 0 
-      ? suitableWeapons[Math.floor(Math.random() * suitableWeapons.length)]
-      : weapons[Math.floor(Math.random() * weapons.length)];
-    
-    const contractResult = {...newWeapon, price: rewardValue};
-    setOpenedWeapon(contractResult);
-    setInventory(prev => [...prev, contractResult]);
-    
-    setSelectedItems([]);
-    setShowContracts(false);
+    setTimeout(() => {
+      // Убираем выбранные предметы из инвентаря
+      setInventory(prev => 
+        prev.filter(item => !selectedItems.find(selected => selected.name === item.name))
+      );
+      
+      let rewardValue;
+      if (random < 0.5) {
+        // 50% шанс получить на 80% меньше
+        rewardValue = Math.floor(totalValue * 0.2);
+      } else {
+        // 50% шанс получить на 40% больше
+        rewardValue = Math.floor(totalValue * 1.4);
+      }
+      
+      // Находим подходящее оружие по цене
+      const suitableWeapons = weapons.filter(w => Math.abs(w.price - rewardValue) < rewardValue * 0.3);
+      const newWeapon = suitableWeapons.length > 0 
+        ? suitableWeapons[Math.floor(Math.random() * suitableWeapons.length)]
+        : weapons[Math.floor(Math.random() * weapons.length)];
+      
+      const contractResult = {...newWeapon, price: rewardValue};
+      setOpenedWeapon(contractResult);
+      setInventory(prev => [...prev, contractResult]);
+      setUserStats(prev => ({
+        ...prev, 
+        contractsCompleted: prev.contractsCompleted + 1,
+        totalSpent: prev.totalSpent + totalValue,
+        totalEarned: prev.totalEarned + rewardValue
+      }));
+      
+      setSelectedItems([]);
+      setShowContracts(false);
+      setContractAnimating(false);
+    }, 2500);
   };
 
   const sellItem = (item: any, index: number) => {
     setBalance(prev => prev + item.price);
+    setUserStats(prev => ({
+      ...prev, 
+      totalEarned: prev.totalEarned + item.price,
+      totalProfit: prev.totalProfit + item.price
+    }));
     if (index !== -1) {
       setInventory(prev => prev.filter((_, i) => i !== index));
     }
@@ -246,8 +276,11 @@ const Index = () => {
   const handleAuth = (email: string, password: string) => {
     const newUser = {
       email,
+      username: email.split('@')[0],
       isAdmin: email === 'admin@junglecases.com',
-      balance: balance
+      balance: balance,
+      joinDate: new Date('2024-01-15'),
+      avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${email}`
     };
     setUser(newUser);
     setShowAuth(false);
@@ -255,6 +288,10 @@ const Index = () => {
     if (newUser.isAdmin) {
       setShowAdmin(true);
     }
+  };
+
+  const scrollToSection = (sectionId: string) => {
+    document.getElementById(sectionId)?.scrollIntoView({ behavior: 'smooth' });
   };
 
   return (
@@ -271,14 +308,35 @@ const Index = () => {
             </div>
             
             <div className="hidden md:flex items-center space-x-8">
-              <a href="#home" className="text-jungle-cobra hover:text-white transition-colors">Главная</a>
-              <a href="#cases" className="text-white hover:text-jungle-cobra transition-colors">Кейсы</a>
-              <a href="#inventory" className="text-white hover:text-jungle-cobra transition-colors">Инвентарь</a>
+              <button 
+                onClick={() => scrollToSection('home')}
+                className="text-jungle-cobra hover:text-white transition-colors"
+              >
+                Главная
+              </button>
+              <button 
+                onClick={() => scrollToSection('cases')}
+                className="text-white hover:text-jungle-cobra transition-colors"
+              >
+                Кейсы
+              </button>
+              <button 
+                onClick={() => scrollToSection('inventory')}
+                className="text-white hover:text-jungle-cobra transition-colors"
+              >
+                Инвентарь
+              </button>
               <button 
                 onClick={() => setShowContracts(true)}
                 className="text-white hover:text-jungle-cobra transition-colors"
               >
                 Контракты
+              </button>
+              <button 
+                onClick={() => setShowStats(true)}
+                className="text-white hover:text-jungle-cobra transition-colors"
+              >
+                Статистика
               </button>
             </div>
 
@@ -290,7 +348,17 @@ const Index = () => {
               
               {user ? (
                 <div className="flex items-center space-x-2">
-                  <span className="text-white">{user.email}</span>
+                  <button
+                    onClick={() => setShowProfile(true)}
+                    className="flex items-center space-x-2 text-white hover:text-jungle-cobra transition-colors"
+                  >
+                    <img 
+                      src={user.avatar} 
+                      alt={user.username}
+                      className="w-8 h-8 rounded-full border-2 border-jungle-cobra"
+                    />
+                    <span>{user.username}</span>
+                  </button>
                   {user.isAdmin && (
                     <Button 
                       onClick={() => setShowAdmin(true)}
@@ -323,15 +391,143 @@ const Index = () => {
         </div>
       </nav>
 
+      {/* Profile Dialog */}
+      <Dialog open={showProfile} onOpenChange={setShowProfile}>
+        <DialogContent className="bg-jungle-dark border-jungle-accent/20 max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="text-white font-['Oswald'] text-2xl flex items-center">
+              <Icon name="User" className="w-6 h-6 mr-2 text-jungle-cobra" />
+              Профиль охотника
+            </DialogTitle>
+          </DialogHeader>
+          
+          {user && (
+            <div className="space-y-6">
+              <div className="flex items-center space-x-6 p-6 bg-jungle-darker rounded-lg">
+                <img 
+                  src={user.avatar} 
+                  alt={user.username}
+                  className="w-24 h-24 rounded-full border-4 border-jungle-cobra"
+                />
+                <div>
+                  <h3 className="text-2xl font-bold text-white font-['Oswald']">{user.username}</h3>
+                  <p className="text-jungle-cobra">{user.email}</p>
+                  <p className="text-gray-400">В джунглях с {user.joinDate.toLocaleDateString('ru')}</p>
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div className="p-4 bg-jungle-darker rounded-lg text-center">
+                  <Icon name="Package" className="w-8 h-8 text-jungle-cobra mx-auto mb-2" />
+                  <p className="text-2xl font-bold text-white">{userStats.casesOpened}</p>
+                  <p className="text-gray-400">Открыто кейсов</p>
+                </div>
+                
+                <div className="p-4 bg-jungle-darker rounded-lg text-center">
+                  <Icon name="FileContract" className="w-8 h-8 text-jungle-gold mx-auto mb-2" />
+                  <p className="text-2xl font-bold text-white">{userStats.contractsCompleted}</p>
+                  <p className="text-gray-400">Контрактов</p>
+                </div>
+                
+                <div className="p-4 bg-jungle-darker rounded-lg text-center">
+                  <Icon name="TrendingUp" className="w-8 h-8 text-green-500 mx-auto mb-2" />
+                  <p className="text-2xl font-bold text-green-400">{userStats.totalProfit} 🐍</p>
+                  <p className="text-gray-400">Прибыль</p>
+                </div>
+                
+                <div className="p-4 bg-jungle-darker rounded-lg text-center">
+                  <Icon name="Zap" className="w-8 h-8 text-jungle-accent mx-auto mb-2" />
+                  <p className="text-2xl font-bold text-white">{userStats.luckyStreak}</p>
+                  <p className="text-gray-400">Удачная серия</p>
+                </div>
+              </div>
+              
+              <div className="p-4 bg-jungle-darker rounded-lg">
+                <h4 className="text-white font-bold mb-2">Любимое оружие</h4>
+                <p className="text-jungle-cobra">{userStats.favoriteWeapon}</p>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Statistics Dialog */}
+      <Dialog open={showStats} onOpenChange={setShowStats}>
+        <DialogContent className="bg-jungle-dark border-jungle-accent/20 max-w-4xl">
+          <DialogHeader>
+            <DialogTitle className="text-white font-['Oswald'] text-2xl">
+              <Icon name="BarChart3" className="w-6 h-6 inline mr-2 text-jungle-accent" />
+              Статистика джунглей
+            </DialogTitle>
+          </DialogHeader>
+          
+          <div className="grid md:grid-cols-3 gap-6 py-4">
+            <Card className="bg-jungle-darker border-jungle-cobra/20 stats-card">
+              <CardContent className="p-6 text-center">
+                <Icon name="Users" className="w-12 h-12 text-jungle-cobra mx-auto mb-4" />
+                <h3 className="text-white font-bold text-2xl mb-2">12,847</h3>
+                <p className="text-gray-400">Активных охотников</p>
+                <p className="text-xs text-jungle-cobra mt-2">+247 за неделю</p>
+              </CardContent>
+            </Card>
+            
+            <Card className="bg-jungle-darker border-jungle-gold/20 stats-card">
+              <CardContent className="p-6 text-center">
+                <Icon name="Package" className="w-12 h-12 text-jungle-gold mx-auto mb-4" />
+                <h3 className="text-white font-bold text-2xl mb-2">89,432</h3>
+                <p className="text-gray-400">Открыто кейсов</p>
+                <p className="text-xs text-jungle-gold mt-2">+1,234 сегодня</p>
+              </CardContent>
+            </Card>
+            
+            <Card className="bg-jungle-darker border-jungle-accent/20 stats-card">
+              <CardContent className="p-6 text-center">
+                <Icon name="TrendingUp" className="w-12 h-12 text-jungle-accent mx-auto mb-4" />
+                <h3 className="text-white font-bold text-2xl mb-2">523,410 🐍</h3>
+                <p className="text-gray-400">Общий оборот</p>
+                <p className="text-xs text-jungle-accent mt-2">+15,230 сегодня</p>
+              </CardContent>
+            </Card>
+            
+            <Card className="bg-jungle-darker border-red-500/20 stats-card">
+              <CardContent className="p-6 text-center">
+                <Icon name="FileContract" className="w-12 h-12 text-red-400 mx-auto mb-4" />
+                <h3 className="text-white font-bold text-2xl mb-2">15,678</h3>
+                <p className="text-gray-400">Контрактов заключено</p>
+                <p className="text-xs text-red-400 mt-2">67% успешных</p>
+              </CardContent>
+            </Card>
+            
+            <Card className="bg-jungle-darker border-purple-500/20 stats-card">
+              <CardContent className="p-6 text-center">
+                <Icon name="Crown" className="w-12 h-12 text-purple-400 mx-auto mb-4" />
+                <h3 className="text-white font-bold text-2xl mb-2">AK-47 | Tiger</h3>
+                <p className="text-gray-400">Самый редкий дроп</p>
+                <p className="text-xs text-purple-400 mt-2">0.001% шанс</p>
+              </CardContent>
+            </Card>
+            
+            <Card className="bg-jungle-darker border-green-500/20 stats-card">
+              <CardContent className="p-6 text-center">
+                <Icon name="Target" className="w-12 h-12 text-green-400 mx-auto mb-4" />
+                <h3 className="text-white font-bold text-2xl mb-2">78%</h3>
+                <p className="text-gray-400">Средний винрейт</p>
+                <p className="text-xs text-green-400 mt-2">Выше среднего</p>
+              </CardContent>
+            </Card>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       {/* Auth Dialog */}
       <Dialog open={showAuth} onOpenChange={setShowAuth}>
         <DialogContent className="bg-jungle-dark border-jungle-accent/20">
           <DialogHeader>
             <DialogTitle className="text-white font-['Oswald']">
-              {authMode === 'login' ? 'Вход в аккаунт' : 'Регистрация'}
+              {authMode === 'login' ? 'Вход в джунгли' : 'Регистрация охотника'}
             </DialogTitle>
             <DialogDescription className="text-gray-400">
-              {authMode === 'login' ? 'Войдите в свой аккаунт' : 'Создайте новый аккаунт'}
+              {authMode === 'login' ? 'Войдите в свой аккаунт' : 'Создайте новый аккаунт охотника'}
             </DialogDescription>
           </DialogHeader>
           
@@ -348,17 +544,17 @@ const Index = () => {
             <TabsContent value="login" className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="email" className="text-white">Email</Label>
-                <Input id="email" type="email" placeholder="your@email.com" className="bg-jungle-darker border-jungle-accent/20 text-white" />
+                <Input id="email" type="email" placeholder="hunter@jungle.com" className="bg-jungle-darker border-jungle-accent/20 text-white" />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="password" className="text-white">Пароль</Label>
                 <Input id="password" type="password" className="bg-jungle-darker border-jungle-accent/20 text-white" />
               </div>
               <Button 
-                onClick={() => handleAuth('user@test.com', 'password')}
+                onClick={() => handleAuth('hunter@jungle.com', 'password')}
                 className="w-full cobra-gradient text-black font-bold"
               >
-                Войти
+                Войти в джунгли
               </Button>
               <p className="text-xs text-gray-400 text-center">
                 Для админ-панели используйте: admin@junglecases.com
@@ -368,7 +564,7 @@ const Index = () => {
             <TabsContent value="register" className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="reg-email" className="text-white">Email</Label>
-                <Input id="reg-email" type="email" placeholder="your@email.com" className="bg-jungle-darker border-jungle-accent/20 text-white" />
+                <Input id="reg-email" type="email" placeholder="hunter@jungle.com" className="bg-jungle-darker border-jungle-accent/20 text-white" />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="reg-password" className="text-white">Пароль</Label>
@@ -379,10 +575,10 @@ const Index = () => {
                 <Input id="confirm-password" type="password" className="bg-jungle-darker border-jungle-accent/20 text-white" />
               </div>
               <Button 
-                onClick={() => handleAuth('newuser@test.com', 'password')}
+                onClick={() => handleAuth('newhunter@jungle.com', 'password')}
                 className="w-full cobra-gradient text-black font-bold"
               >
-                Зарегистрироваться
+                Стать охотником
               </Button>
             </TabsContent>
           </Tabs>
@@ -406,7 +602,7 @@ const Index = () => {
             <Card className="bg-jungle-darker border-jungle-cobra/20">
               <CardContent className="p-6 text-center">
                 <Icon name="Users" className="w-12 h-12 text-jungle-cobra mx-auto mb-4" />
-                <h3 className="text-white font-bold text-xl mb-2">1,247</h3>
+                <h3 className="text-white font-bold text-xl mb-2">12,847</h3>
                 <p className="text-gray-400">Активных охотников</p>
               </CardContent>
             </Card>
@@ -414,7 +610,7 @@ const Index = () => {
             <Card className="bg-jungle-darker border-jungle-gold/20">
               <CardContent className="p-6 text-center">
                 <Icon name="Package" className="w-12 h-12 text-jungle-gold mx-auto mb-4" />
-                <h3 className="text-white font-bold text-xl mb-2">8,932</h3>
+                <h3 className="text-white font-bold text-xl mb-2">89,432</h3>
                 <p className="text-gray-400">Открыто кейсов</p>
               </CardContent>
             </Card>
@@ -422,7 +618,7 @@ const Index = () => {
             <Card className="bg-jungle-darker border-jungle-accent/20">
               <CardContent className="p-6 text-center">
                 <Icon name="TrendingUp" className="w-12 h-12 text-jungle-accent mx-auto mb-4" />
-                <h3 className="text-white font-bold text-xl mb-2">52,341 🐍</h3>
+                <h3 className="text-white font-bold text-xl mb-2">523,410 🐍</h3>
                 <p className="text-gray-400">Общий оборот</p>
               </CardContent>
             </Card>
@@ -463,11 +659,20 @@ const Index = () => {
               Испытайте удачу и получите редчайшие предметы от королевской кобры!
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button size="lg" className="cobra-gradient text-black font-bold text-lg px-8 hover:opacity-90 jungle-pulse">
+              <Button 
+                size="lg" 
+                onClick={() => scrollToSection('cases')}
+                className="cobra-gradient text-black font-bold text-lg px-8 hover:opacity-90 jungle-pulse"
+              >
                 <Icon name="Play" className="w-5 h-5 mr-2" />
                 В джунгли!
               </Button>
-              <Button size="lg" variant="outline" className="border-jungle-cobra text-jungle-cobra hover:bg-jungle-cobra hover:text-black">
+              <Button 
+                size="lg" 
+                variant="outline" 
+                onClick={() => setShowStats(true)}
+                className="border-jungle-cobra text-jungle-cobra hover:bg-jungle-cobra hover:text-black"
+              >
                 <Icon name="TrendingUp" className="w-5 h-5 mr-2" />
                 Статистика
               </Button>
@@ -686,62 +891,85 @@ const Index = () => {
 
       {/* Contracts Dialog */}
       <Dialog open={showContracts} onOpenChange={setShowContracts}>
-        <DialogContent className="bg-jungle-dark border-jungle-accent/20 max-w-2xl">
+        <DialogContent className="bg-jungle-dark border-jungle-accent/20 max-w-3xl">
           <DialogHeader>
             <DialogTitle className="text-white font-['Oswald'] text-2xl">
               <Icon name="FileContract" className="w-6 h-6 inline mr-2 text-jungle-accent" />
-              Контракт кобры
+              Контракт кобры 🐍
             </DialogTitle>
             <DialogDescription className="text-gray-400">
               Объедините 10 предметов для заключения контракта с королевской коброй
             </DialogDescription>
           </DialogHeader>
           
-          <div className="space-y-6">
-            <div className="grid grid-cols-5 gap-2">
+          <div className={`space-y-6 ${contractAnimating ? 'contract-animation' : ''}`}>
+            <div className="grid grid-cols-5 gap-3">
               {selectedItems.map((item, index) => (
-                <div key={index} className={`p-2 rounded-lg ${getRarityClass(item.rarity)} flex flex-col items-center space-y-1`}>
-                  <img src={item.image} alt={item.name} className="w-12 h-12 rounded object-cover" />
+                <div 
+                  key={index} 
+                  className={`p-3 rounded-lg ${getRarityClass(item.rarity)} flex flex-col items-center space-y-2 ${contractAnimating ? 'contract-item-animation' : ''}`}
+                  style={{animationDelay: `${index * 0.1}s`}}
+                >
+                  <img src={item.image} alt={item.name} className="w-16 h-16 rounded object-cover" />
                   <p className="text-black font-bold text-xs text-center">{item.name.split('|')[0]}</p>
                   <p className="text-black text-xs">{item.price} 🐍</p>
                 </div>
               ))}
             </div>
             
-            <div className="bg-jungle-darker p-4 rounded-lg border border-jungle-accent/20">
-              <h4 className="text-white font-bold mb-2">Условия контракта:</h4>
-              <p className="text-white text-sm mb-2">
-                <strong>Общая стоимость:</strong> {selectedItems.reduce((sum, item) => sum + item.price, 0)} 🐍
+            <div className="bg-jungle-darker p-6 rounded-xl border-2 border-jungle-accent/20 relative overflow-hidden">
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-jungle-accent/5 to-transparent"></div>
+              <h4 className="text-white font-bold mb-4 text-xl font-['Oswald']">🐍 Условия контракта королевской кобры:</h4>
+              <p className="text-white text-lg mb-4">
+                <strong>Общая жертва:</strong> {selectedItems.reduce((sum, item) => sum + item.price, 0)} 🐍
               </p>
-              <div className="grid grid-cols-2 gap-4 text-sm">
-                <div className="bg-red-900/30 p-3 rounded border border-red-500/20">
-                  <p className="text-red-300 font-bold">50% шанс</p>
-                  <p className="text-red-200">Получить {Math.floor(selectedItems.reduce((sum, item) => sum + item.price, 0) * 0.2)} 🐍</p>
-                  <p className="text-xs text-red-400">(на 80% меньше)</p>
+              <div className="grid grid-cols-2 gap-6 text-sm">
+                <div className="bg-gradient-to-br from-red-900/40 to-red-800/20 p-6 rounded-xl border border-red-500/30">
+                  <div className="text-center">
+                    <Icon name="TrendingDown" className="w-8 h-8 text-red-400 mx-auto mb-3" />
+                    <p className="text-red-300 font-bold text-lg">50% шанс</p>
+                    <p className="text-red-200 text-xl font-bold">{Math.floor(selectedItems.reduce((sum, item) => sum + item.price, 0) * 0.2)} 🐍</p>
+                    <p className="text-xs text-red-400 mt-2">Кобра забирает 80%</p>
+                  </div>
                 </div>
-                <div className="bg-green-900/30 p-3 rounded border border-green-500/20">
-                  <p className="text-green-300 font-bold">50% шанс</p>
-                  <p className="text-green-200">Получить {Math.floor(selectedItems.reduce((sum, item) => sum + item.price, 0) * 1.4)} 🐍</p>
-                  <p className="text-xs text-green-400">(на 40% больше)</p>
+                <div className="bg-gradient-to-br from-green-900/40 to-green-800/20 p-6 rounded-xl border border-green-500/30">
+                  <div className="text-center">
+                    <Icon name="TrendingUp" className="w-8 h-8 text-green-400 mx-auto mb-3" />
+                    <p className="text-green-300 font-bold text-lg">50% шанс</p>
+                    <p className="text-green-200 text-xl font-bold">{Math.floor(selectedItems.reduce((sum, item) => sum + item.price, 0) * 1.4)} 🐍</p>
+                    <p className="text-xs text-green-400 mt-2">Кобра благословляет +40%</p>
+                  </div>
                 </div>
               </div>
-              <p className="text-jungle-gold text-xs mt-3">
-                🐍 Кобра решит вашу судьбу! Все предметы будут принесены в жертву.
-              </p>
+              <div className="mt-6 p-4 bg-jungle-accent/10 rounded-lg border border-jungle-accent/30">
+                <p className="text-jungle-gold text-center font-bold">
+                  🐍 Королевская кобра решит вашу судьбу! Все предметы будут принесены в жертву. 🐍
+                </p>
+              </div>
             </div>
             
             <div className="flex gap-4">
               <Button 
                 onClick={performContract}
-                disabled={selectedItems.length !== 10}
-                className="cobra-gradient text-black font-bold flex-1 text-lg"
+                disabled={selectedItems.length !== 10 || contractAnimating}
+                className="cobra-gradient text-black font-bold flex-1 text-lg jungle-pulse"
               >
-                <Icon name="Zap" className="w-5 h-5 mr-2" />
-                Заключить контракт 🐍
+                {contractAnimating ? (
+                  <>
+                    <Icon name="Loader2" className="w-5 h-5 mr-2 animate-spin" />
+                    Кобра решает...
+                  </>
+                ) : (
+                  <>
+                    <Icon name="Zap" className="w-5 h-5 mr-2" />
+                    Заключить контракт 🐍
+                  </>
+                )}
               </Button>
               <Button 
                 onClick={() => {setShowContracts(false); setSelectedItems([]);}}
                 variant="outline"
+                disabled={contractAnimating}
                 className="border-white text-white"
               >
                 Отмена
@@ -770,10 +998,10 @@ const Index = () => {
             <div>
               <h4 className="text-white font-bold mb-4">Охота</h4>
               <ul className="space-y-2 text-gray-400 text-sm">
-                <li><a href="#cases" className="hover:text-jungle-cobra transition-colors">Кейсы</a></li>
-                <li><a href="#inventory" className="hover:text-jungle-cobra transition-colors">Инвентарь</a></li>
-                <li><a href="#" className="hover:text-jungle-cobra transition-colors">Контракты</a></li>
-                <li><a href="#" className="hover:text-jungle-cobra transition-colors">Торговля</a></li>
+                <li><button onClick={() => scrollToSection('cases')} className="hover:text-jungle-cobra transition-colors">Кейсы</button></li>
+                <li><button onClick={() => scrollToSection('inventory')} className="hover:text-jungle-cobra transition-colors">Инвентарь</button></li>
+                <li><button onClick={() => setShowContracts(true)} className="hover:text-jungle-cobra transition-colors">Контракты</button></li>
+                <li><button onClick={() => setShowStats(true)} className="hover:text-jungle-cobra transition-colors">Статистика</button></li>
               </ul>
             </div>
             
