@@ -27,7 +27,7 @@ const Navigation: React.FC<NavigationProps> = ({
 }) => {
   return (
     <nav className="bg-black/50 backdrop-blur-sm border-b border-jungle-accent/20 sticky top-0 z-50">
-      <div className="container mx-auto px-6 py-4">
+      <div className="container mx-auto py-2 px-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2">
             <div className="w-10 h-10 cobra-gradient rounded-lg flex items-center justify-center">
@@ -37,7 +37,7 @@ const Navigation: React.FC<NavigationProps> = ({
 </span>
           </div>
           
-          <div className="hidden md:flex items-center space-x-6">
+          <div className="hidden md:flex items-center space-x-6 mx-[27px]">
             <Button 
               variant="ghost" 
               onClick={() => setShowInventory(true)}
@@ -72,8 +72,8 @@ const Navigation: React.FC<NavigationProps> = ({
             </Button>
           </div>
 
-          <div className="flex items-center space-x-4">
-            <div className="flex items-center space-x-2 bg-jungle-dark rounded-lg px-4 py-2">
+          <div className="flex items-center space-x-4 mx-0 px-0 py-[3px]">
+            <div className="flex items-center space-x-2 bg-jungle-dark rounded-lg py-2 mx-0 px-0">
               <Icon name="Coins" className="w-5 h-5 text-jungle-gold" />
               <span className="text-jungle-gold font-bold text-xs mx-[9px]">{balance} 🐍</span>
             </div>
@@ -85,7 +85,7 @@ const Navigation: React.FC<NavigationProps> = ({
               <img 
                 src={user.avatar} 
                 alt={user.username}
-                className="w-8 h-8 rounded-full border-2 border-jungle-cobra"
+                className="w-8 h-8 rounded-full border-2 border-jungle-cobra mx-2 py-0"
               />
               <span>{user.username}</span>
             </button>
