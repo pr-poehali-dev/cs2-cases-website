@@ -42,9 +42,7 @@ const AuthDialog: React.FC<AuthDialogProps> = ({
     <Dialog open={showAuth} onOpenChange={() => {}}>
       <DialogContent className="bg-jungle-dark border-jungle-accent/20" onInteractOutside={(e) => e.preventDefault()}>
         <DialogHeader>
-          <DialogTitle className="text-white font-['Oswald'] text-center text-2xl">
-            🐍 Добро пожаловать в джунгли! 🐍
-          </DialogTitle>
+          <DialogTitle className="text-white font-['Oswald'] text-center text-2xl">🐍 Добро пожаловать в СOBRAS  ! 🐍</DialogTitle>
           <DialogDescription className="text-gray-400 text-center">
             Авторизуйтесь для доступа к охоте за скинами
           </DialogDescription>
